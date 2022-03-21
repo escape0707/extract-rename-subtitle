@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Extract softsubs from a series of videos."
-        ' Look at the globs / patterns / track information etc in a file named "subtitle-utils-patterns.json" to determine from which videos to extract and to what subtitle file name to write.'
+        ' Look at the globs / patterns / track information etc in a file named "subtitle-utils.json" to determine from which videos to extract and to what subtitle file name to write.'
         " Patterns are used to extract episode info from input videos and optionally match output subtitles to output videos names."
         " A template JSON file will be created in the working_directory if not exist and opened for editing.",
     )
@@ -131,7 +131,7 @@ if __name__ == "__main__":
         nargs="?",
         default=pathlib.Path(),
         type=pathlib.Path,
-        help='The directory containing source videos and "subtitle-utils-patterns.json", also the place to put extracted subtitles. (Default: current working directory)',
+        help='The directory containing source videos and "subtitle-utils.json", also the place to put extracted subtitles. (Default: current working directory)',
     )
     cli_args = parser.parse_args()
 

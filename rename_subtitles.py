@@ -2,7 +2,7 @@
 
 import pathlib
 import re
-from typing import List, Pattern, Tuple
+from typing import Dict, List, Pattern, Tuple, TypedDict
 
 from subtitle_utils import (
     get_video_by_ep_collection_with_glob_and_pattern,
@@ -10,6 +10,15 @@ from subtitle_utils import (
     prompt_for_user_confirmation,
     simple_ep_pattern,
 )
+
+
+class RenamingMetadata(TypedDict):
+    subtitle_tag_by_glob_collection: Dict[
+        str, str
+    ]  # Optional. Used to collect subtitles to rename and given them a tag in the resulting name.Can be used to identify language or subtitle group. (Default: {"*.ass": "", "*.srt": ""})
+    video_glob: str  # Optional. Used to collect videos to match. (Default: "*.mkv")
+    subtitle_ep_pattern: str  # Optional. Used to identify the episode info from the subtitle file. (Default: simple_ep_pattern)
+    video_ep_pattern: str  # Optional. Used to identify the episode info from the video file. (Default: simple_ep_pattern)
 
 
 def rename_subtitles(
@@ -48,21 +57,40 @@ def rename_subtitles(
 
 
 if __name__ == "__main__":
-    video_glob = "*.mkv"
-    # video_ep_pattern = simple_ep_pattern
-    video_ep_pattern = re.compile(r".*\s(\d{2})[v\s].*")
-    # video_ep_pattern = re.compile(r".*\[(\d{2})\].*")
-    sub_glob = "*.ass"
-    # sub_ep_pattern = simple_ep_pattern
-    sub_ep_pattern = re.compile(r".*\[(\d{2})\].*")
-    # sub_ep_pattern = re.compile(r".*\s(\d{2})\..*")
-    # sub_ep_pattern = re.compile(r".*第(\d{2})話.*")
-    sub_lang = ""
-    # sub_lang = "zh-Hant"
+    # Read command line argument(s)
+    import argparse
 
+    parser = argparse.ArgumentParser(
+        description="Rename softsubs to match a series of videos."
+        ' Look at the globs / patterns etc in a file named "subtitle-utils.json" to determine to rename which subtitles to what file names.'
+        " Patterns are used to extract episode info from videos and subtitles."
+        " A template JSON file will be created in the working_directory if not exist and opened for editing.",
+    )
+    parser.add_argument(
+        "video_directory",
+        nargs="?",
+        default=pathlib.Path(),
+        type=pathlib.Path,
+        help='The directory containing videos, "subtitle-utils.json", and the subtitles. (Default: current working directory)',
+    )
+    cli_args = parser.parse_args()
+
+    # Read metadata
+    metadata: RenamingMetadata = {
+        "subtitle_ep_pattern": r".*E(\d{2})\..*",
+        "subtitle_tag_by_glob_collection": {"*.srt": "ja"},
+        "video_ep_pattern": r".*\[(\d{2})\].*",
+        "video_glob": "*.mkv",
+    }
+
+    video_ep_pattern = re.compile(metadata["video_ep_pattern"])
+    subtitle_ep_pattern = re.compile(metadata["subtitle_ep_pattern"])
     video_by_ep_collection = get_video_by_ep_collection_with_glob_and_pattern(
-        video_glob, video_ep_pattern
+        metadata["video_glob"], video_ep_pattern, cli_args.video_directory
     )
     print_video_by_ep_collection(video_by_ep_collection)
     print()
-    rename_subtitles(video_by_ep_collection, sub_glob, sub_ep_pattern, sub_lang)
+    for subtitle_glob, tag in metadata["subtitle_tag_by_glob_collection"].items():
+        rename_subtitles(
+            video_by_ep_collection, subtitle_glob, subtitle_ep_pattern, tag, cli_args.video_directory
+        )
