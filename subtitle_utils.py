@@ -5,48 +5,44 @@ import json
 import pathlib
 import re
 import subprocess
-from typing import Any
+from typing import Any, List
 
 simple_ep_pattern = re.compile(r"\s(\d{2})\s")
-metadata_filename = "sub-utils.json"
+config_filename = "sub-utils.json"
 
 
-def print_video_by_ep_collection(
-    video_by_ep_collection: dict[str, pathlib.Path]
+def print_ep_to_video_map(
+    ep_to_video_map: dict[str, pathlib.Path],
 ) -> None:
     print("Video Ep;\tVideo path:")
-    print(
-        *itertools.starmap("{};\t{}".format, video_by_ep_collection.items()), sep="\n"
-    )
+    print(*itertools.starmap("{};\t{}".format, ep_to_video_map.items()), sep="\n")
 
 
-def get_video_collection_with_glob(
-    video_glob: str, video_dir: pathlib.Path = pathlib.Path()
-) -> tuple[pathlib.Path, ...]:
-    return tuple(video_dir.glob(video_glob))
+def get_paths_with_glob(
+    glob: str, directory: pathlib.Path = pathlib.Path()
+) -> List[pathlib.Path]:
+    return sorted(directory.glob(glob))
 
 
-def generate_video_by_ep_collection_with_pattern(
-    video_collection: tuple[pathlib.Path, ...],
+def extract_ep_info(
+    videos: List[pathlib.Path],
     video_ep_pattern: re.Pattern[str] = simple_ep_pattern,
 ) -> dict[str, pathlib.Path]:
-    video_by_ep_collection: dict[str, pathlib.Path] = {}
-    for video in video_collection:
-        m = video_ep_pattern.search(video.stem)
-        if m:
-            video_by_ep_collection[m[1]] = video
-    return video_by_ep_collection
+    return {
+        match[1]: video
+        for video in videos
+        if (match := video_ep_pattern.search(video.stem))
+    }
 
 
-def get_video_by_ep_collection_with_glob_and_pattern(
+def get_ep_to_video_map(
     video_glob: str = "*.mkv",
     video_ep_pattern: re.Pattern[str] = simple_ep_pattern,
     video_dir: pathlib.Path = pathlib.Path(),
 ) -> dict[str, pathlib.Path]:
-    video_collection = get_video_collection_with_glob(video_glob, video_dir)
-    return generate_video_by_ep_collection_with_pattern(
-        video_collection, video_ep_pattern
-    )
+    videos = get_paths_with_glob(video_glob, video_dir)
+    ep_to_video_map = extract_ep_info(videos, video_ep_pattern)
+    return ep_to_video_map
 
 
 def prompt_for_user_confirmation(request_text: str) -> bool:

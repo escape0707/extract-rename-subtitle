@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
-import pathlib
 import re
 import shlex
 import subprocess
-from typing import Any, Optional, TypedDict
+from pathlib import Path
+from typing import Any, List, Optional, TypedDict
 
 from subtitle_utils import (
     extract_sub_lang_by_track_collection_with_video_sub_info,
-    get_video_by_ep_collection_with_glob_and_pattern,
-    get_video_collection_with_glob,
+    get_ep_to_video_map,
+    get_paths_with_glob,
     get_video_sub_info,
     prompt_for_user_confirmation,
     simple_ep_pattern,
@@ -17,7 +17,9 @@ from subtitle_utils import (
 
 
 class ExtractionMetadata(TypedDict, total=False):
-    origin_video_glob: str  # Mandatory. Used to collect videos to extract subtitles from.
+    origin_video_glob: (
+        str  # Mandatory. Used to collect videos to extract subtitles from.
+    )
     sub_lang_by_track_collection: dict[
         int, str
     ]  # Currently mandatory. Specified stream track should contain extractable subtitle stream. The string value (of the dict) will be used as extracted subtitle's language tag.
@@ -27,9 +29,9 @@ class ExtractionMetadata(TypedDict, total=False):
 
 
 def extract_subtitles(
-    origin_video_collection: tuple[pathlib.Path, ...],
+    origin_video_collection: tuple[Path, ...],
     sub_lang_by_track_collection: Optional[dict[int, str]] = None,
-    target_video_by_ep_collection: Optional[dict[str, pathlib.Path]] = None,
+    target_video_by_ep_collection: Optional[dict[str, Path]] = None,
     origin_video_ep_pattern: re.Pattern[str] = simple_ep_pattern,
 ) -> None:
     """
@@ -40,7 +42,7 @@ def extract_subtitles(
     and then use shlex.join to join the cmd tuple to a string, then print it to the terminal.
     """
 
-    def _get_target_video() -> pathlib.Path:
+    def _get_target_video() -> Path:
         if target_video_by_ep_collection:
             m = origin_video_ep_pattern.search(origin_video.stem)
             if m:
@@ -85,7 +87,7 @@ def extract_subtitles(
 
 
 def extract_fonts(
-    video_collection: tuple[pathlib.Path, ...], font_dir: Optional[pathlib.Path] = None
+    video_collection: List[Path], font_dir: Optional[Path] = None
 ) -> None:
     if not video_collection:
         return
@@ -105,7 +107,7 @@ def extract_fonts(
         )
         print(shlex.join(cmd))
         pending_font_extraction.append(cmd)
-    assert isinstance(font_dir, pathlib.Path)
+    assert isinstance(font_dir, Path)
     if prompt_for_user_confirmation(f'Extract font to folder "{font_dir}?"'):
         if not font_dir.is_dir():
             font_dir.mkdir(
@@ -116,8 +118,7 @@ def extract_fonts(
             subprocess.run(cmd, cwd=font_dir)
 
 
-if __name__ == "__main__":
-    # Read command line argument(s)
+def parse_args():
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -129,11 +130,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "video_directory",
         nargs="?",
-        default=pathlib.Path(),
-        type=pathlib.Path,
+        default=Path(),
+        type=Path,
         help='The directory containing source videos and "sub-utils.json", also the place to put extracted subtitles. (Default: current working directory)',
     )
-    cli_args = parser.parse_args()
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    cli_args = parse_args()
 
     # Read metadata
     metadata: ExtractionMetadata = {
@@ -147,7 +152,7 @@ if __name__ == "__main__":
     # Process
     extraction_args: dict[str, Any] = {}
     try:
-        origin_video_collection = get_video_collection_with_glob(
+        origin_video_collection = get_paths_with_glob(
             metadata["origin_video_glob"], cli_args.video_directory
         )
         extraction_args["origin_video_collection"] = origin_video_collection
@@ -162,9 +167,7 @@ if __name__ == "__main__":
             if "target_video_ep_pattern" in metadata
             else simple_ep_pattern
         )
-        extraction_args[
-            "target_video_by_ep_collection"
-        ] = get_video_by_ep_collection_with_glob_and_pattern(
+        extraction_args["target_video_by_ep_collection"] = get_ep_to_video_map(
             metadata["target_video_glob"],
             target_video_ep_pattern,
             cli_args.video_directory,
