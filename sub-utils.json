@@ -1,0 +1,9 @@
+{
+    "subtitle_ep_pattern": "\\s(\\d{2})\\s",
+    "subtitle_tag_by_glob_collection": {
+        "*BIG5.ass": "cht",
+        "*GB.ass": "chs"
+    },
+    "video_ep_pattern": "\\s(\\d{2})\\s",
+    "video_glob": "*.mkv"
+}
