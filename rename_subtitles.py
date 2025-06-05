@@ -3,32 +3,34 @@
 import json
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Pattern, Tuple, TypedDict
+from re import Pattern
+from typing import TYPE_CHECKING, TypedDict
 
 from subtitle_utils import (
-    config_filename,
+    SIMPLE_EP_PATTERN,
     get_ep_to_video_map,
     get_paths_with_glob,
     print_ep_to_video_map,
     prompt_for_user_confirmation,
-    simple_ep_pattern,
 )
 
 if TYPE_CHECKING:
     from argparse import Namespace
 
+RENAME_CONFIG_FILENAME = "sub-rename-config.json"
+
 
 class RenameConfig(TypedDict):
-    subtitle_ep_pattern: (
-        str  # Optional. Used to extract episode information from the subtitle file.
-    )
-    glob_to_subtitle_tag_map: Dict[
-        str, str
-    ]  # Optional. A mapping of glob patterns to tags. Used to collect subtitles to rename and given them a tag in the resulting name. Tags can denote the subtitle's language or the fan sub group name.
-    video_ep_pattern: (
-        str  # Optional. Used to extract episode information from the video file.
-    )
-    video_glob: str  # Optional. Used to collect video files.
+    # Optional. Used to extract episode information from the subtitle file.
+    subtitle_ep_pattern: str
+    # Optional. A mapping of glob patterns to tags. Used to collect subtitles to
+    # rename and given them a tag in the resulting name. Tags can denote the
+    # subtitle's language or the fan sub group name.
+    glob_to_subtitle_tag_map: dict[str, str]
+    # Optional. Used to extract episode information from the video file.
+    video_ep_pattern: str
+    # Optional. Used to collect video files.
+    video_glob: str
 
 
 DEFAULT_RENAME_CONFIG: RenameConfig = {
@@ -42,7 +44,7 @@ DEFAULT_RENAME_CONFIG: RenameConfig = {
 def rename_subtitles(
     ep_to_video_map: dict[str, Path],
     sub_glob: str = "*.ass",
-    sub_ep_pattern: Pattern[str] = simple_ep_pattern,
+    sub_ep_pattern: Pattern[str] = SIMPLE_EP_PATTERN,
     sub_tag: str = "",
     working_directory: Path = Path(),
 ) -> None:
@@ -56,7 +58,7 @@ def rename_subtitles(
     5. Prompt user for confirmation before renaming all subtitles.
     """
     # I already miss Rust's `.collect()`.
-    proposed_changes: List[Tuple[Path, str]] = [
+    proposed_changes: list[tuple[Path, str]] = [
         (
             sub_filepath,
             video.stem
@@ -118,10 +120,10 @@ def build_configs(config_filepath: Path) -> RenameConfig:
     raise SystemExit
 
 
-if __name__ == "__main__":
+def main() -> None:
     cli_args = parse_args()
     video_dir: Path = cli_args.video_directory
-    configs = build_configs(video_dir / config_filename)
+    configs = build_configs(video_dir / RENAME_CONFIG_FILENAME)
 
     video_ep_pattern = re.compile(configs["video_ep_pattern"])
     subtitle_ep_pattern = re.compile(configs["subtitle_ep_pattern"])
@@ -138,3 +140,7 @@ if __name__ == "__main__":
             tag,
             video_dir,
         )
+
+
+if __name__ == "__main__":
+    main()
