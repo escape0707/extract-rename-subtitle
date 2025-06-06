@@ -4,7 +4,7 @@ import argparse
 from argparse import Namespace
 from pathlib import Path
 
-from SubtitleExtractor import SubtitleExtractor
+from extractor import SubtitleExtractor
 
 
 def parse_args() -> Namespace:

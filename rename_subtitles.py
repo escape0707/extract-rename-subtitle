@@ -4,7 +4,7 @@ import argparse
 from argparse import Namespace
 from pathlib import Path
 
-from SubtitleRenamer import SubtitleRenamer
+from renamer import SubtitleRenamer
 
 
 def parse_args() -> Namespace:
