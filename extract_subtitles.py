@@ -24,7 +24,7 @@ def parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def main() -> None:
+def main():
     cli_args = parse_args()
     video_dir: Path = cli_args.video_directory
     extractor = SubtitleExtractor.new(video_dir)

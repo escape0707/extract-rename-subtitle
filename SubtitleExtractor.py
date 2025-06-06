@@ -94,7 +94,7 @@ class SubtitleExtractor:
             origin_video_ep_pattern,
         )
 
-    def extract_subtitles(self) -> None:
+    def extract_subtitles(self):
         """
         1. Extract all the subtitle tracks from the origin video.
         2. Use sub_stream_id_to_tag_map to map each subtitle track to a language,
@@ -117,7 +117,7 @@ class SubtitleExtractor:
             for cmd in pending_subtitle_extraction:
                 subprocess.run(cmd)
 
-    def extract_fonts(self) -> None:
+    def extract_fonts(self):
         assert self.origin_videos
         font_dir = self.font_dir or self.origin_videos[0].with_name("fonts")
         pending_font_extraction: tuple[tuple[str, ...], ...] = tuple(

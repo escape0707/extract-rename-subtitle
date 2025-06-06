@@ -9,13 +9,14 @@ from re import Pattern
 from typing import Any
 
 EXTRACTION_CONFIG_FILENAME = "sub-extraction-config.json"
+RENAME_CONFIG_FILENAME = "sub-renaming-config.json"
 SIMPLE_EP_PATTERN = re.compile(r"\s(\d{2})\s")
 SUB_CODEC_TO_SUFFIX_MAP = {"subrip": "srt", "ass": "ass"}
 
 
 def print_ep_to_video_map(
     ep_to_video_map: dict[str, Path],
-) -> None:
+):
     print("Video Ep;\tVideo path:")
     print(*itertools.starmap("{};\t{}".format, ep_to_video_map.items()), sep="\n")
 
