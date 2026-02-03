@@ -1,0 +1,26 @@
+# sub-utils.toml
+# Regex patterns use single quotes to avoid escaping backslashes.
+
+[rename]
+video_glob = "*.mkv"
+video_ep_pattern = '\s(\d{2})\s'
+subtitle_ep_pattern = '\s(\d{2})\s'
+
+[rename.subtitle_tag_by_glob]
+"*.ass" = "ja"
+"*.srt" = "en"
+
+[extract]
+origin_video_glob = "*.mkv"
+# target_video_glob = "*.mp4"
+# origin_video_ep_pattern = '\s(\d{2})\s'
+# target_video_ep_pattern = '\s(\d{2})\s'
+
+# If omitted, sub-utils will infer language tags from ffprobe.
+[extract.sub_lang_by_track]
+0 = "eng"
+1 = "jpn"
+
+[fonts]
+video_glob = "*.mkv"
+output_dir = "fonts"
